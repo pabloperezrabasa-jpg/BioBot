@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BioBot · Bioética & Deliberación · CIEPE / USS</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ciepe:      #0C4A47;
+  --ciepe-mid:  #0F5E5A;
+  --ciepe-gold: #A89060;
+  --ciepe-light:#E8F4F3;
+  --uss:        #1C3461;
+  --uss-mid:    #243E78;
+  --uss-gold:   #C9A040;
+  --uss-light:  #EBF0F8;
+  --cream:      #F5F2EC;
+  --dark:       #111418;
+  --text:       #1A1E26;
+  --muted:      #6B7280;
+  --border:     #D8D4CC;
+  --white:      #FFFFFF;
+}
+
+html,body{height:100%;background:var(--cream);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300}
+
+/* ── GRAIN ── */
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");pointer-events:none;z-index:9999}
+
+/* ── LAYOUT ── */
+#app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;max-width:820px;margin:0 auto;background:var(--white);box-shadow:0 0 60px rgba(0,0,0,.08)}
+
+/* ── HEADER PARTIDO ── */
+header{display:grid;grid-template-columns:1fr 1fr;height:72px}
+
+.hdr-ciepe{
+  background:var(--ciepe);
+  display:flex;align-items:center;gap:10px;padding:0 20px;
+  border-bottom:3px solid var(--ciepe-gold);
+}
+.hdr-uss{
+  background:var(--uss);
+  display:flex;align-items:center;gap:10px;padding:0 20px;
+  justify-content:flex-end;
+  border-bottom:3px solid var(--uss-gold);
+}
+
+/* CIEPE Owl SVG inline */
+.owl-wrap{width:38px;height:38px;flex-shrink:0}
+
+.hdr-label{display:flex;flex-direction:column}
+.hdr-label .inst{font-family:'Cormorant Garamond',serif;font-size:1rem;font-weight:600;letter-spacing:.08em;color:var(--white)}
+.hdr-label .sub{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;color:var(--white)}
+
+.uss-seal{width:36px;height:36px;flex-shrink:0;background:var(--uss-gold);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.uss-seal span{font-family:'Cormorant Garamond',serif;font-size:.65rem;font-weight:700;color:var(--uss);text-align:center;line-height:1.1}
+
+/* Bot name bar */
+.bot-bar{
+  grid-column:1/-1;
+  background:linear-gradient(90deg,var(--ciepe) 0%,var(--ciepe-mid) 49%,var(--uss-mid) 51%,var(--uss) 100%);
+  height:38px;display:flex;align-items:center;justify-content:center;gap:12px;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+.bot-bar .name{font-family:'Cormorant Garamond',serif;font-size:1.15rem;font-weight:600;color:var(--white);letter-spacing:.15em}
+.bot-bar .tag{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#3C3C3C;transition:all .4s}
+.status-dot.on{background:#4CAF7A;box-shadow:0 0 8px rgba(76,175,122,.6)}
+
+/* ── SETUP ── */
+#setup{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;text-align:center;animation:fadeUp .5s ease}
+#setup .owl-big{width:72px;height:72px;margin-bottom:20px}
+#setup h2{font-family:'Cormorant Garamond',serif;font-size:1.7rem;font-weight:600;color:var(--ciepe);margin-bottom:8px}
+#setup p{font-size:.88rem;color:var(--muted);max-width:400px;line-height:1.75;margin-bottom:28px}
+#setup a{color:var(--ciepe);border-bottom:1px solid var(--ciepe-gold)}
+.key-form{width:100%;max-width:400px;display:flex;flex-direction:column;gap:10px}
+.key-form input{background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;transition:border-color .2s}
+.key-form input:focus{border-color:var(--ciepe)}
+.key-form input::placeholder{color:var(--muted)}
+.btn-split{border:none;border-radius:8px;padding:13px 20px;font-family:'DM Sans',sans-serif;font-size:.9rem;font-weight:500;cursor:pointer;transition:opacity .2s,transform .1s;background:linear-gradient(90deg,var(--ciepe),var(--uss));color:var(--white)}
+.btn-split:hover{opacity:.88}
+.btn-split:active{transform:scale(.98)}
+
+/* ── CHAT ── */
+#chat-wrap{overflow-y:auto;padding:24px 24px 8px;display:flex;flex-direction:column;gap:18px;scroll-behavior:smooth}
+#chat-wrap::-webkit-scrollbar{width:3px}
+#chat-wrap::-webkit-scrollbar-track{background:transparent}
+#chat-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+.msg{display:flex;gap:12px;animation:slideUp .28s ease}
+.msg.user{flex-direction:row-reverse}
+
+.avatar{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.msg.bot .avatar{background:linear-gradient(135deg,var(--ciepe),var(--uss));padding:4px}
+.msg.user .avatar{background:var(--cream);border:1.5px solid var(--border);font-size:.8rem;color:var(--muted)}
+
+.bubble{max-width:80%;padding:13px 17px;border-radius:12px;font-size:.88rem;line-height:1.75}
+.msg.bot .bubble{background:var(--cream);border:1px solid var(--border);border-top-left-radius:4px;color:var(--text)}
+.msg.user .bubble{background:linear-gradient(135deg,var(--ciepe-light),var(--uss-light));border:1px solid #C8D4E0;border-top-right-radius:4px;color:var(--text)}
+
+.bubble strong{color:var(--ciepe);font-weight:500}
+.bubble em{color:var(--muted);font-style:italic}
+.bubble .step{display:block;background:var(--white);border-left:3px solid var(--ciepe-gold);padding:6px 10px;margin:6px 0;border-radius:0 4px 4px 0;font-size:.84rem}
+
+/* typing */
+.typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ciepe-gold);animation:bounce 1.2s infinite;margin:0 2px}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-6px);opacity:1}}
+
+/* ── INPUT ── */
+#input-area{padding:14px 24px 20px;border-top:1px solid var(--border);background:var(--white)}
+.input-row{display:flex;gap:10px;align-items:flex-end}
+#msg-input{flex:1;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:11px 15px;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);outline:none;resize:none;min-height:44px;max-height:120px;line-height:1.6;transition:border-color .2s}
+#msg-input:focus{border-color:var(--ciepe)}
+#msg-input::placeholder{color:var(--muted)}
+
+#send-btn{width:44px;height:44px;flex-shrink:0;background:linear-gradient(135deg,var(--ciepe),var(--uss));border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:opacity .2s,transform .1s}
+#send-btn:hover{opacity:.85}
+#send-btn:active{transform:scale(.95)}
+#send-btn:disabled{opacity:.3;cursor:default}
+#send-btn svg{width:17px;height:17px;fill:white}
+
+.disclaimer{font-size:.65rem;color:var(--muted);text-align:center;margin-top:8px;letter-spacing:.02em}
+
+/* ── ENCUESTA ── */
+#survey-panel{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;animation:fadeIn .3s}
+#survey-panel.show{display:flex}
+.survey-box{background:var(--white);border-radius:16px;max-width:480px;width:90%;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.survey-box h3{font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--ciepe);margin-bottom:6px}
+.survey-box .surv-sub{font-size:.8rem;color:var(--muted);margin-bottom:24px}
+.surv-q{margin-bottom:20px}
+.surv-q label{display:block;font-size:.85rem;font-weight:400;color:var(--text);margin-bottom:8px}
+.stars{display:flex;gap:6px}
+.star{font-size:1.4rem;cursor:pointer;color:var(--border);transition:color .15s}
+.star.active,.star:hover{color:var(--ciepe-gold)}
+.surv-q textarea{width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--text);resize:none;height:70px;outline:none}
+.surv-q textarea:focus{border-color:var(--ciepe)}
+.surv-actions{display:flex;gap:10px;margin-top:8px}
+.btn-skip{flex:1;background:transparent;border:1.5px solid var(--border);border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;color:var(--muted);cursor:pointer}
+.btn-enviar{flex:2;background:linear-gradient(135deg,var(--ciepe),var(--uss));border:none;border-radius:8px;padding:10px;font-family:'DM Sans',sans-serif;font-size:.84rem;font-weight:500;color:white;cursor:pointer}
+
+/* ── DESCARGA ── */
+#dl-btn{position:fixed;bottom:90px;right:16px;width:40px;height:40px;background:var(--ciepe);border:none;border-radius:50%;cursor:pointer;display:none;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.2);transition:transform .2s;z-index:50}
+#dl-btn:hover{transform:scale(1.1)}
+#dl-btn svg{width:17px;height:17px;fill:white}
+#dl-btn.visible{display:flex}
+
+/* ── ANIMS ── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.hidden{display:none!important}
+
+@media(max-width:480px){
+  .hdr-label .sub{display:none}
+  header{height:60px}
+  .bot-bar .tag{display:none}
+  #chat-wrap,#input-area{padding-left:14px;padding-right:14px}
+  .bubble{max-width:92%}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── HEADER ── -->
+<div style="display:grid;grid-template-rows:auto auto">
+<header>
+  <!-- CIEPE -->
+  <div class="hdr-ciepe">
+    <div class="owl-wrap">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="49" fill="#0C4A47"/>
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#A89060" stroke-width="3.5"/>
+        <!-- ear tufts -->
+        <path d="M38,28 Q36,16 42,22 Q44,15 46,24" fill="#A89060"/>
+        <path d="M62,28 Q64,16 58,22 Q56,15 54,24" fill="#A89060"/>
+        <!-- body left gold -->
+        <path d="M50,28 Q33,34 30,56 Q29,72 38,80 Q44,84 50,84 L50,28Z" fill="#A89060"/>
+        <!-- body right cream -->
+        <path d="M50,28 Q67,34 70,56 Q71,72 62,80 Q56,84 50,84 L50,28Z" fill="#E8E2D2"/>
+        <!-- face oval -->
+        <ellipse cx="50" cy="50" rx="15" ry="20" fill="#E8E2D2"/>
+        <!-- face outline / veil -->
+        <path d="M35,50 Q36,33 50,30 Q64,33 65,50 Q64,65 50,68 Q36,65 35,50Z" fill="none" stroke="#A89060" stroke-width="1.5" opacity=".5"/>
+        <!-- eyes -->
+        <circle cx="44" cy="46" r="3.2" fill="#0C4A47"/>
+        <circle cx="56" cy="46" r="3.2" fill="#0C4A47"/>
+        <circle cx="44.9" cy="45.1" r="1" fill="white" opacity=".6"/>
+        <circle cx="56.9" cy="45.1" r="1" fill="white" opacity=".6"/>
+        <!-- beak -->
+        <path d="M47.5,52 L52.5,52 L50,56 Z" fill="#7A6040"/>
+        <!-- center divider -->
+        <line x1="50" y1="28" x2="50" y2="82" stroke="#0C4A47" stroke-width="1.8" opacity=".4"/>
+      </svg>
+    </div>
+    <div class="hdr-label">
+      <span class="inst">CIEPE</span>
+      <span class="sub">Ética · Política · Economía</span>
+    </div>
+  </div>
+  <!-- USS -->
+  <div class="hdr-uss">
+    <div class="hdr-label" style="text-align:right">
+      <span class="inst">USS</span>
+      <span class="sub">Universidad San Sebastián</span>
+    </div>
+    <div class="uss-seal">
+      <span>USS<br/>1989</span>
+    </div>
+  </div>
+</header>
+<!-- bot bar -->
+<div class="bot-bar">
+  <div class="status-dot" id="status-dot"></div>
+  <span class="name">BioBot</span>
+  <span class="tag">Asistente especializado en Bioética &amp; Métodos Deliberativos</span>
+</div>
+</div>
+
+<!-- ── SETUP ── -->
+<div id="setup">
+  <svg class="owl-big" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="50" cy="50" r="49" fill="#0C4A47"/>
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#A89060" stroke-width="3.5"/>
+    <path d="M38,28 Q36,16 42,22 Q44,15 46,24" fill="#A89060"/>
+    <path d="M62,28 Q64,16 58,22 Q56,15 54,24" fill="#A89060"/>
+    <path d="M50,28 Q33,34 30,56 Q29,72 38,80 Q44,84 50,84 L50,28Z" fill="#A89060"/>
+    <path d="M50,28 Q67,34 70,56 Q71,72 62,80 Q56,84 50,84 L50,28Z" fill="#E8E2D2"/>
+    <ellipse cx="50" cy="50" rx="15" ry="20" fill="#E8E2D2"/>
+    <circle cx="44" cy="46" r="3.2" fill="#0C4A47"/>
+    <circle cx="56" cy="46" r="3.2" fill="#0C4A47"/>
+    <circle cx="44.9" cy="45.1" r="1" fill="white" opacity=".6"/>
+    <circle cx="56.9" cy="45.1" r="1" fill="white" opacity=".6"/>
+    <path d="M47.5,52 L52.5,52 L50,56 Z" fill="#7A6040"/>
+    <line x1="50" y1="28" x2="50" y2="82" stroke="#0C4A47" stroke-width="1.8" opacity=".4"/>
+  </svg>
+  <h2>Configurar BioBot</h2>
+  <p>BioBot es un asistente especializado en Bioética y Métodos Deliberativos, desarrollado por <strong style="color:var(--ciepe)">CIEPE</strong> y la <strong style="color:var(--uss)">Universidad San Sebastián</strong>.<br/><br/>Ingresá tu clave de Groq para comenzar. La obtenés gratis en <a href="https://console.groq.com/keys" target="_blank">console.groq.com/keys</a></p>
+  <div class="key-form">
+    <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off" spellcheck="false"/>
+    <button class="btn-split" onclick="conectar()">Conectar BioBot →</button>
+  </div>
+</div>
+
+<!-- ── CHAT ── -->
+<div id="chat-wrap" class="hidden"></div>
+
+<!-- ── INPUT ── -->
+<div id="input-area" class="hidden">
+  <div class="input-row">
+    <textarea id="msg-input" rows="1" placeholder="Describí un caso, consultá sobre principios bioéticos o pedí una deliberación paso a paso…"></textarea>
+    <button id="send-btn" onclick="enviar()" title="Enviar">
+      <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+  <p class="disclaimer">BioBot orienta y delibera, pero no reemplaza el juicio de un especialista en bioética. Proyecto CIEPE — USS · 2026</p>
+</div>
+
+</div><!-- #app -->
+
+<!-- ── ENCUESTA ── -->
+<div id="survey-panel">
+  <div class="survey-box">
+    <h3>Evaluación de la sesión</h3>
+    <p class="surv-sub">Tu opinión ayuda a mejorar BioBot. Toma menos de un minuto.</p>
+    <div class="surv-q">
+      <label>¿Qué tan pertinentes fueron las respuestas de BioBot?</label>
+      <div class="stars" id="stars-1" data-q="1"></div>
+    </div>
+    <div class="surv-q">
+      <label>¿El método deliberativo aplicado fue claro y útil?</label>
+      <div class="stars" id="stars-2" data-q="2"></div>
+    </div>
+    <div class="surv-q">
+      <label>¿Cuál es tu perfil? <span style="font-weight:300;color:var(--muted)">(opcional)</span></label>
+      <select id="perfil-sel" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;background:var(--cream);font-family:'DM Sans',sans-serif;font-size:.85rem;color:var(--text);outline:none">
+        <option value="">Seleccioná...</option>
+        <option>Estudiante de medicina/salud</option>
+        <option>Estudiante de otras carreras</option>
+        <option>Profesional de la salud</option>
+        <option>Académico/investigador</option>
+        <option>Miembro de comité de ética</option>
+        <option>Otro</option>
+      </select>
+    </div>
+    <div class="surv-q">
+      <label>Comentarios o sugerencias <span style="font-weight:300;color:var(--muted)">(opcional)</span></label>
+      <textarea id="surv-comment" placeholder="Escribí aquí..."></textarea>
+    </div>
+    <div class="surv-actions">
+      <button class="btn-skip" onclick="cerrarEncuesta(false)">Omitir</button>
+      <button class="btn-enviar" onclick="enviarEncuesta()">Enviar evaluación</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DESCARGA ── -->
+<button id="dl-btn" title="Descargar sesión" onclick="descargarSesion()">
+  <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zm-8 2V5h2v6h1.17L12 13.17 9.83 11H11zm-6 7h14v2H5z"/></svg>
+</button>
+
+<script>
+// ═══════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════
+let apiKey = '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';
+const historial = [];
+const sesionLog = { inicio: new Date().toISOString(), mensajes: [], encuesta: null };
+const ratings = { 1: 0, 2: 0 };
+
+// ═══════════════════════════════════════════
+// SYSTEM PROMPT — EXPERTO MÁXIMO
+// ═══════════════════════════════════════════
+const SYSTEM = `Sos BioBot, un asistente especializado en Bioética y Métodos Deliberativos desarrollado por CIEPE (Centro Interdisciplinario en Ética, Política y Economía) y la Universidad San Sebastián (USS) de Chile. Respondés siempre en español.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TU IDENTIDAD Y PRESENTACIÓN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Cuando alguien te saluda o pregunta quién sos, te presentás así: "Hola, soy BioBot, asistente especializado en Bioética y Métodos Deliberativos, desarrollado por CIEPE y la Universidad San Sebastián. Puedo orientarte sobre principios bioéticos, aplicar modelos deliberativos a casos clínicos o de investigación, y acompañarte en el análisis ético de situaciones complejas."
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOMINIO 1 — BIOÉTICA: FUNDAMENTOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Principios de Beauchamp y Childress (Principialismo)**
+Los cuatro principios del principialismo angloamericano:
+1. AUTONOMÍA: Respeto por la capacidad del paciente de tomar decisiones informadas. Implica consentimiento informado, veracidad, confidencialidad y privacidad. La autonomía no es absoluta: requiere competencia, información adecuada y ausencia de coacción.
+2. BENEFICENCIA: Obligación de hacer el bien al paciente. Incluye curar, aliviar el sufrimiento, proteger los derechos, prevenir daños. Exige considerar balance riesgo-beneficio.
+3. NO MALEFICENCIA: Primum non nocere. Obligación de no causar daño de forma deliberada. Incluye no matar, no causar dolor innecesario, no incapacitar ni privar de placer.
+4. JUSTICIA: Distribución equitativa de cargas y beneficios en salud. Incluye acceso igualitario, asignación de recursos escasos, equidad en investigación.
+
+**Bioética latinoamericana**
+- Perspectivas críticas que interpelan el principialismo desde contextos de desigualdad, colonialidad y pluralismo cultural.
+- Bioética social: énfasis en determinantes sociales de salud, justicia distributiva, derechos humanos.
+- Autores clave: Diego Gracia (España/Latinoamérica), Volnei Garrafa (Brasil), Fernando Lolas (Chile), Miguel Kottow (Chile).
+
+**Marcos normativos internacionales**
+- Declaración de Helsinki (AMM): ética de la investigación con seres humanos. Principios: protocolo aprobado, consentimiento informado, comités de ética, protección de grupos vulnerables.
+- Informe Belmont (1979): respeto por las personas, beneficencia, justicia. Base de la bioética de la investigación angloamericana.
+- Declaración Universal de Bioética y Derechos Humanos (UNESCO, 2005): marco global con énfasis en dignidad humana, pluralismo, equidad.
+- Guías CIOMS (2017): investigación biomédica en países de bajos y medianos ingresos.
+
+**Bioética clínica**
+- Relación médico-paciente: paternalismo vs. autonomía.
+- Consentimiento informado: validez, competencia, elementos esenciales.
+- Rechazo de tratamiento y voluntades anticipadas.
+- Decisiones al final de la vida: eutanasia, ortotanasia, distanasia, cuidados paliativos.
+- Limitación del esfuerzo terapéutico (LET).
+- Pacientes incompetentes: representantes, interés superior.
+- Confidencialidad y secreto profesional.
+- Veracidad y comunicación de malas noticias.
+
+**Bioética de la investigación**
+- Consentimiento informado en investigación.
+- Selección equitativa de sujetos.
+- Relación riesgo-beneficio.
+- Grupos vulnerables: embarazadas, menores, presos, enfermedades graves.
+- Doble estándar ético en investigación internacional.
+- Conflictos de interés.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOMINIO 2 — MÉTODOS DELIBERATIVOS (TU ESPECIALIDAD CENTRAL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**¿Qué es la deliberación en bioética?**
+La deliberación es el proceso racional, dialogal y prudente de análisis de casos o problemas éticos complejos. No busca certezas absolutas sino decisiones razonables y fundamentadas. Exige escucha activa, tolerancia, respeto por las diferencias y disposición a revisar las propias posiciones.
+
+**Tipos de problema bioético**
+- PROBLEMA MÉDICO: Se relaciona con diagnóstico, tratamiento o evolución desde el punto de vista estrictamente clínico.
+- PROBLEMA BIOÉTICO: Aparece cuando un problema médico se entrelaza con dilemas de valores (hechos + valores = conflicto ético-clínico).
+- PROBLEMA ÉTICO PURO: Surge cuando entran en conflicto valores, principios o deberes morales, independientemente de la situación clínica.
+
+**Estructura del juicio clínico deliberativo**
+Todo caso deliberativo consta de tres partes:
+- HECHO (lo que ocurre médica y contextualmente)
+- JUICIOS DE VALOR (lo que los actores creen, valoran, temen o desean)
+- DEBER (lo que éticamente debería hacerse)
+Ejemplo: "Don Pedro tiene diabetes tipo I recién diagnosticada" (HECHO) → "Está muy preocupado por su salud" (JUICIO DE VALOR) → "Necesita tratamiento y apoyo emocional" (DEBER)
+
+**Competencias para la deliberación**
+- Escucha activa y atenta, especialmente de opiniones que difieren de las propias.
+- Alto grado de respeto y tolerancia en la deliberación grupal.
+- Prudencia: virtud cardinal de la deliberación. Capacidad de elegir lo correcto en contextos de incertidumbre.
+- Humildad epistémica: reconocer los límites del propio juicio.
+
+━━━━━━━━━━━━
+MODELO DELIBERATIVO DE 6 PASOS (Bustamante-Chuecas / De los Ríos-Uriarte)
+━━━━━━━━━━━━
+Cuando alguien te presenta un caso clínico o ético, APLICÁS este método sistemáticamente:
+
+**PASO 1 — Describir todos los datos médicos y contextuales relevantes**
+Historia clínica del paciente y condición actual. Naturaleza, implicaciones y consecuencias de las acciones realizadas o por realizar. Antecedentes que afectan la toma de decisiones.
+
+**PASO 2 — Describir todos los valores y conflictos de interés presentes**
+Identificar los valores y preferencias de los tres agentes principales: paciente, familia/allegados, equipo de salud. También: políticas hospitalarias, marcos jurídicos, intereses institucionales, factores económicos. Mapear todos los actores involucrados.
+
+**PASO 3 — Determinar el principal conflicto de valores**
+De todos los conflictos identificados, determinar cuál es el central y por qué está en tensión con los otros. Jerarquizar los conflictos. Identificar qué principios bioéticos están en juego (autonomía vs. beneficencia, etc.).
+
+**PASO 4 — Determinar todos los posibles cursos de acción éticos**
+Explorar las distintas posibilidades de acción. Para cada una: ¿protege los valores en juego? ¿Cuáles ventajas y desventajas tiene para cada actor? ¿Es éticamente admisible? Incluir opciones que no sean las más evidentes.
+
+**PASO 5 — Elegir una opción**
+Seleccionar la opción más razonable considerando: los valores detectados, los cursos de acción posibles, las implicaciones de cada uno, el contexto específico. Explicar por qué esta opción es preferible a las demás.
+
+**PASO 6 — Dar razones de la elección y sostenerla**
+Fundamentar la decisión con razones sólidas desde la ética. Ponderar a la luz de los principios bioéticos. Anticipar objeciones y responderlas. La solidez de la fundamentación es lo que hace válida la decisión.
+
+━━━━━━━━━━━━
+MÉTODO DE JONSEN, SIEGLER & WINSLADE ("4 Cajas")
+━━━━━━━━━━━━
+Método complementario muy usado en bioética clínica anglosajona. Organiza el análisis en cuatro dominios:
+
+**CAJA 1 — Indicaciones médicas**
+¿Cuál es el diagnóstico? ¿Cuál es el pronóstico? ¿Cuáles son los objetivos del tratamiento? ¿Cuáles son los beneficios esperados? ¿Qué probabilidades hay de éxito?
+
+**CAJA 2 — Preferencias del paciente**
+¿Es el paciente competente? ¿Ha expresado sus preferencias (consentimiento informado, voluntades anticipadas)? ¿Ha rechazado tratamiento? ¿Hay representante legal?
+
+**CAJA 3 — Calidad de vida**
+¿Cuáles son las perspectivas de recuperación? ¿Existen sesgos en la evaluación de la calidad de vida? ¿Cuándo sería razonable limitar el esfuerzo terapéutico?
+
+**CAJA 4 — Aspectos contextuales**
+Factores familiares, económicos, religiosos, culturales. Recursos institucionales. Aspectos legales. Conflictos de interés. Distribución de recursos.
+
+━━━━━━━━━━━━
+MODELO DE DIEGO GRACIA (Escuela Española de Bioética)
+━━━━━━━━━━━━
+Diego Gracia propone una jerarquía de principios en dos niveles:
+- Nivel 1 (de obligación perfecta): No maleficencia y Justicia (dimensión pública, social).
+- Nivel 2 (de obligación imperfecta): Autonomía y Beneficencia (dimensión privada, relacional).
+Los principios del nivel 1 tienen prioridad sobre los del nivel 2. Esto invierte la jerarquía habitual del principialismo clásico.
+
+━━━━━━━━━━━━
+DELIBERACIÓN EN COMITÉS DE ÉTICA (Método CASUÍSTICO)
+━━━━━━━━━━━━
+La casuística (Jonsen y Toulmin) analiza los casos particulares buscando paradigmas morales. Pasos:
+1. Identificar el caso paradigmático más cercano.
+2. Comparar similitudes y diferencias con el caso actual.
+3. Aplicar el juicio del caso paradigmático con las modificaciones necesarias.
+Útil cuando hay conflicto entre principios abstractos y el contexto particular.
+
+━━━━━━━━━━━━
+ÉTICA NARRATIVA
+━━━━━━━━━━━━
+Considera la historia del paciente, su identidad narrativa y sus valores de vida como insumo central del análisis ético. Autores: Arthur Kleinman, Rita Charon. Complementa los modelos principialistas con la comprensión del paciente como persona.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+CÓMO RESPONDÉS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**Cuando alguien te presenta un caso clínico:**
+Aplicás el Modelo Deliberativo de 6 Pasos de forma sistemática y visible. Indicás claramente en qué paso estás. Identificás los principios bioéticos en tensión. Al final, das una recomendación fundamentada y sostenible.
+
+**Cuando alguien hace una pregunta teórica:**
+Respondés con profundidad académica, citás autores y marcos normativos, presentás distintas perspectivas donde hay debate, y promovés la reflexión crítica.
+
+**Cuando el caso es complejo o hay dilema real:**
+Reconocés la complejidad, no simplificás artificialmente, presentás las tensiones con honestidad, y guiás hacia la opción más razonable (no necesariamente la más cómoda).
+
+**Tono:** Académico pero accesible. Cálido pero riguroso. Nunca dogmático. Siempre invitás a la reflexión.
+
+**Límites claros:** Si alguien pregunta fuera del campo bioético, lo indicás amablemente y ofrecés redirigir. Nunca tomás partido político ni religioso, aunque presentás los argumentos de distintas tradiciones. Siempre aclarás que BioBot orienta pero no reemplaza el juicio de un especialista ni de un comité de ética institucional.`;
+
+// ═══════════════════════════════════════════
+// CONECTAR
+// ═══════════════════════════════════════════
+function conectar() {
+  const input = document.getElementById('api-key-input');
+  const key = input.value.trim();
+  if (!key.startsWith('gsk_')) {
+    input.style.borderColor = '#c0392b';
+    setTimeout(() => input.style.borderColor = '', 2500);
+    input.placeholder = 'Debe comenzar con gsk_…';
+    return;
+  }
+  apiKey = key;
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('chat-wrap').classList.remove('hidden');
+  document.getElementById('input-area').classList.remove('hidden');
+  document.getElementById('status-dot').classList.add('on');
+  document.getElementById('dl-btn').classList.add('visible');
+
+  agregarMsg('bot', `¡Hola! Soy **BioBot**, asistente especializado en **Bioética y Métodos Deliberativos**, desarrollado por **CIEPE** y la **Universidad San Sebastián**.\n\nPuedo ayudarte a:\n\n• Analizar un caso clínico o de investigación aplicando el **método deliberativo de 6 pasos**\n• Orientarte sobre **principios bioéticos** (autonomía, beneficencia, no maleficencia, justicia)\n• Aplicar los modelos de **Jonsen-Siegler-Winslade**, **Diego Gracia** o el enfoque casuístico\n• Explorar dilemas éticos en **investigación, clínica, salud pública o comités de ética**\n\n¿Con qué querés comenzar?`);
+  document.getElementById('msg-input').focus();
+}
+
+// ═══════════════════════════════════════════
+// ENVIAR
+// ═══════════════════════════════════════════
+async function enviar() {
+  const ta = document.getElementById('msg-input');
+  const texto = ta.value.trim();
+  if (!texto || !apiKey) return;
+  ta.value = ''; autoResize(ta);
+  setOcupado(true);
+
+  agregarMsg('user', texto);
+  historial.push({ role: 'user', content: texto });
+  sesionLog.mensajes.push({ rol: 'usuario', texto, hora: new Date().toISOString() });
+
+  const tid = agregarTyping();
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'system', content: SYSTEM }, ...historial],
+        temperature: 0.6,
+        max_tokens: 1400
+      })
+    });
+    quitarTyping(tid);
+    if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.error?.message || `Error ${res.status}`); }
+    const data = await res.json();
+    const resp = data.choices?.[0]?.message?.content || '(sin respuesta)';
+    historial.push({ role: 'assistant', content: resp });
+    sesionLog.mensajes.push({ rol: 'biobot', texto: resp, hora: new Date().toISOString() });
+    agregarMsg('bot', resp);
+    if (historial.filter(m => m.role === 'user').length === 4) mostrarEncuesta();
+  } catch(e) {
+    quitarTyping(tid);
+    const esLocal = location.protocol === 'file:';
+    const msg = esLocal
+      ? `⚠️ **El bot no puede funcionar desde un archivo local.**\n\nSubí el archivo a GitHub Pages o cualquier servidor web y accedé desde una URL real (https://...). Desde ahí funciona sin problemas.`
+      : `⚠️ Error de conexión: *${e.message}*\n\nVerificá tu conexión a internet e intentá de nuevo.`;
+    agregarMsg('bot', msg);
+  }
+  setOcupado(false);
+  document.getElementById('msg-input').focus();
+}
+
+// ═══════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════
+function agregarMsg(rol, texto) {
+  const wrap = document.getElementById('chat-wrap');
+  const div = document.createElement('div');
+  div.className = `msg ${rol}`;
+  const av = rol === 'bot'
+    ? `<div class="avatar"><svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:26px;height:26px"><circle cx="50" cy="50" r="49" fill="#0C4A47"/><path d="M50,28 Q33,34 30,56 Q29,72 38,80 Q44,84 50,84 L50,28Z" fill="#A89060"/><path d="M50,28 Q67,34 70,56 Q71,72 62,80 Q56,84 50,84 L50,28Z" fill="#E8E2D2"/><ellipse cx="50" cy="50" rx="15" ry="20" fill="#E8E2D2"/><circle cx="44" cy="46" r="3" fill="#0C4A47"/><circle cx="56" cy="46" r="3" fill="#0C4A47"/></svg></div>`
+    : `<div class="avatar">↗</div>`;
+  div.innerHTML = `${av}<div class="bubble">${fmt(texto)}</div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function agregarTyping() {
+  const wrap = document.getElementById('chat-wrap');
+  const id = 'ty' + Date.now();
+  const div = document.createElement('div');
+  div.className = 'msg bot'; div.id = id;
+  div.innerHTML = `<div class="avatar"><svg viewBox="0 0 100 100" style="width:26px;height:26px"><circle cx="50" cy="50" r="49" fill="#0C4A47"/><ellipse cx="50" cy="50" rx="15" ry="20" fill="#E8E2D2"/><circle cx="44" cy="46" r="3" fill="#0C4A47"/><circle cx="56" cy="46" r="3" fill="#0C4A47"/></svg></div><div class="bubble typing"><span></span><span></span><span></span></div>`;
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+  return id;
+}
+function quitarTyping(id) { document.getElementById(id)?.remove(); }
+function setOcupado(v) { document.getElementById('send-btn').disabled = v; }
+
+function fmt(t) {
+  return t
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/•\s(.+?)(?=\n|$)/g,'<span class="step">• $1</span>')
+    .replace(/\n/g,'<br>');
+}
+
+function autoResize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+// ═══════════════════════════════════════════
+// ENCUESTA
+// ═══════════════════════════════════════════
+function initStars() {
+  [1, 2].forEach(q => {
+    const wrap = document.getElementById(`stars-${q}`);
+    for (let i = 1; i <= 5; i++) {
+      const s = document.createElement('span');
+      s.className = 'star'; s.textContent = '★'; s.dataset.val = i;
+      s.onclick = () => { ratings[q] = i; wrap.querySelectorAll('.star').forEach((st,idx) => st.classList.toggle('active', idx < i)); };
+      wrap.appendChild(s);
+    }
+  });
+}
+function mostrarEncuesta() { document.getElementById('survey-panel').classList.add('show'); }
+function cerrarEncuesta(enviada) {
+  document.getElementById('survey-panel').classList.remove('show');
+  if (!enviada) sesionLog.encuesta = 'omitida';
+}
+function enviarEncuesta() {
+  sesionLog.encuesta = {
+    pertinencia: ratings[1],
+    claridad_metodo: ratings[2],
+    perfil: document.getElementById('perfil-sel').value,
+    comentario: document.getElementById('surv-comment').value,
+    hora: new Date().toISOString()
+  };
+  cerrarEncuesta(true);
+  agregarMsg('bot', '¡Gracias por tu evaluación! Tu feedback ayuda a mejorar BioBot y contribuye a la investigación CIEPE — USS.');
+}
+
+// ═══════════════════════════════════════════
+// DESCARGA SESIÓN
+// ═══════════════════════════════════════════
+function descargarSesion() {
+  sesionLog.fin = new Date().toISOString();
+  const blob = new Blob([JSON.stringify(sesionLog, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `biobot-sesion-${Date.now()}.json`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// EVENTOS
+// ═══════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initStars();
+  // Arrancar directo en chat
+  document.getElementById('setup').classList.add('hidden');
+  document.getElementById('chat-wrap').classList.remove('hidden');
+  document.getElementById('input-area').classList.remove('hidden');
+  document.getElementById('status-dot').classList.add('on');
+  document.getElementById('dl-btn').classList.add('visible');
+  agregarMsg('bot', `¡Hola! Soy **BioBot**, asistente especializado en **Bioética y Métodos Deliberativos**, desarrollado por **CIEPE** y la **Universidad San Sebastián**.\n\nPuedo ayudarte a:\n\n• Analizar un caso clínico o de investigación aplicando el **método deliberativo de 6 pasos**\n• Orientarte sobre **principios bioéticos** (autonomía, beneficencia, no maleficencia, justicia)\n• Aplicar los modelos de **Jonsen-Siegler-Winslade**, **Diego Gracia** o el enfoque casuístico\n• Explorar dilemas éticos en **investigación, clínica, salud pública o comités de ética**\n\n¿Con qué querés comenzar?`);
+  const ta = document.getElementById('msg-input');
+  ta.addEventListener('input', () => autoResize(ta));
+  ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } });
+  ta.focus();
+});
+</script>
+</body>
+</html>
